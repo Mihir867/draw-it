@@ -1,16 +1,9 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 // import keycloak from './keycloak';
 import HomePage from './Homepage';
-import ProtectedComponent from './ProtectedComponent';
-import LoginPage from './LoginPage';
-import { Excalidraw } from "@excalidraw/excalidraw";
+import Canvas from './Canvas';
 
-
-
-// const PrivateRoute = ({ children }: { children: JSX.Element }) => {
-//   return keycloak.authenticated ? children : <Navigate to="/login" />;
-// };
 
 const App: React.FC = () => {
   
@@ -18,15 +11,12 @@ const App: React.FC = () => {
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/canvas" element={<Excalidraw />} />
-        <Route
-          path="/protected"
-          element={
-            
-              <ProtectedComponent />
-          }
-        />
+        
+       
+        
+        <Route path="/canvas/*" element={<Canvas />} />
+        
+       
       </Routes>
     </Router>
   );
