@@ -10,28 +10,45 @@ import axios from 'axios';
 const UploadComponent: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [progress, setProgress] = useState(0);
+  const [result, setResult] = useState<string | null>(null);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      setFile(event.target.files[0]);
-      simulateUpload();
+      const selectedFile = event.target.files[0];
+      console.log(selectedFile)
+      setFile(selectedFile);
+      await uploadFile(selectedFile);
+      console.log("File hua")
     }
   };
 
-  const simulateUpload = () => {
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 10;
-      setProgress(progress);
-      if (progress >= 100) {
-        clearInterval(interval);
-      }
-    }, 500);
+  const uploadFile = async (file: File) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+  
+      const response = await axios.post(
+        'http://localhost:3002/upload',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+  
+      console.log('Upload successful:', response.data);
+      setResult(response.data)
+    } catch (error: any) {
+      console.error('Error uploading file:', error.response ? error.response.data : error.message);
+      alert('Failed to upload file: ' + (error.response ? error.response.data.error : error.message));
+    }
   };
-
+  
   const handleRemoveFile = () => {
     setFile(null);
     setProgress(0);
+    setResult(null);
   };
 
   return (
@@ -82,8 +99,15 @@ const UploadComponent: React.FC = () => {
           </div>
         </div>
       )}
+      {result && (
+        <div className="mt-4">
+          <h2 className="text-lg font-semibold">Model Output</h2>
+          <pre className="bg-gray-100 p-4 rounded-lg overflow-auto max-h-48">
+            {JSON.stringify(result, null, 2)}
+          </pre>        </div>
+      )}
       <div className="mt-6 flex justify-between">
-        <button className="boton-elegante">Cancel</button>
+        <button className="boton-elegante" onClick={handleRemoveFile}>Cancel</button>
         <button
           className={`boton-elegante2 ${progress === 100 ? 'opacity-100' : 'opacity-50'}`}
           disabled={progress < 100}
@@ -94,6 +118,8 @@ const UploadComponent: React.FC = () => {
     </div>
   );
 };
+
+
 
 
 const CardsComponent: React.FC = () => {
