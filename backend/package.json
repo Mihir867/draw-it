@@ -4,7 +4,7 @@
   "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ts-node src/index.ts"
+    "start": "concurrently \"ts-node src/index.ts\" \"ts-node src/server.ts\""
   },
   "author": "",
   "license": "ISC",
@@ -20,6 +20,7 @@
     "@types/node": "^22.5.0",
     "@types/uuid": "^10.0.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "concurrently": "^8.2.2"
   }
 }

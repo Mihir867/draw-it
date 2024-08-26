@@ -4,8 +4,7 @@ import { ImFileExcel } from 'react-icons/im';
 import { FaPaintBrush } from "react-icons/fa";
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios'; 
-
-
+import "./index.css"
 
 const UploadComponent: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -34,11 +33,18 @@ const UploadComponent: React.FC = () => {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
+          onUploadProgress: (progressEvent) => {
+            // Check if total is defined
+            if (progressEvent.total) {
+              const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              setProgress(percentCompleted);
+            }
+          },
         }
       );
   
       console.log('Upload successful:', response.data);
-      setResult(response.data)
+      setResult(response.data);
     } catch (error: any) {
       console.error('Error uploading file:', error.response ? error.response.data : error.message);
       alert('Failed to upload file: ' + (error.response ? error.response.data.error : error.message));
@@ -52,7 +58,7 @@ const UploadComponent: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-lg bg-white text-black rounded-lg shadow-lg p-6 md:p-8 m-10">
+    <div className="w-full max-w-lg bg-white text-black rounded-lg  p-6 md:p-8 m-10 shadow-[0_0_50px_rgba(0,162,255,0.8),0_0_50px_rgba(0,162,255,0.6)]">
       <h1 className="text-lg font-semibold mb-4">Upload file</h1>
       <div className="border-2 border-dashed border-blue-300 rounded-lg p-6 mb-4 flex justify-center items-center cursor-pointer relative">
         {!file ? (
@@ -127,33 +133,38 @@ const CardsComponent: React.FC = () => {
   const [isModalOpen2, setIsModalOpen2] = useState(false);
   const [name, setName] = useState('');
   const [sessionId, setSessionId] = useState('');
-  const [newSessionId, setNewSessionId] = useState('');
 
   const handleOpenModal = () => setIsModalOpen(true);
-  const handleCloseModal = () => setIsModalOpen(false);
-  const handleOpenModal2 = () => setIsModalOpen2(true);
-  const handleCloseModal2 = () => setIsModalOpen2(false);
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    resetFields();
+  };
 
-  // Function to handle joining a session
+  const handleOpenModal2 = () => setIsModalOpen2(true);
+  const handleCloseModal2 = () => {
+    setIsModalOpen2(false);
+    resetFields();
+  };
+
+  const resetFields = () => {
+    setName('');
+    setSessionId('');
+  };
+
   const handleJoinSubmit = async () => {
     if (name && sessionId) {
-      // Join session logic
-      // Here you can emit a socket event to join the session
       window.location.href = `http://localhost:3000/canvas/sessionId=${sessionId}`;
     } else {
       alert('Please enter your name and session ID.');
     }
   };
 
-  // Function to handle creating a new session
   const handleCreateSubmit = async () => {
     if (name) {
       try {
-        const response = await axios.get('http://localhost:3001/create'); // Adjust the URL if needed
-        console.log(response)
+        const response = await axios.get('http://localhost:3001/create');
         const { sessionId } = response.data;
-        setNewSessionId(sessionId);
-        window.location.href = `http://localhost:3000/canvas/sessionId=${sessionId}`;
+        window.location.href = `http://localhost:3000/canvas?sessionId=${sessionId}`;
       } catch (error) {
         console.error('Error creating session:', error);
         alert('Failed to create session. Please try again.');
@@ -164,47 +175,78 @@ const CardsComponent: React.FC = () => {
   };
 
   return (
-    <>
-      <div className="w-full max-w-lg bg-white rounded-lg shadow-lg p-6 md:p-12">
-        <h1 className="text-lg font-semibold mb-4">Upload Sketch</h1>
-        <div className="border-2 border-black rounded-lg p-10 mb-4 flex justify-center items-center cursor-pointer relative">
-          <FaPaintBrush className='h-10 w-10' />
-        </div>
+    <div className="w-full max-w-lg bg-white rounded-lg  p-6 md:p-12 shadow-[0_0_50px_rgba(0,162,255,0.8),0_0_50px_rgba(0,162,255,0.6)]">
+      <h1 className="text-lg font-semibold mb-4">Upload Sketch</h1>
+      <div className="border-2 border-black rounded-lg p-10 mb-4 flex justify-center items-center cursor-pointer relative">
+        <FaPaintBrush className='h-10 w-10' />
+      </div>
 
-        <div className="mt-6 flex justify-between">
-          <button className="boton-elegante" onClick={handleOpenModal}>Join a Whiteboard</button>
-          <button className="boton-elegante" onClick={handleOpenModal2}>Create Whiteboard</button>
-        </div>
+      <div className="mt-6 flex justify-between">
+        <button className="boton-elegante" onClick={handleOpenModal}>Join a Whiteboard</button>
+        <button className="boton-elegante" onClick={handleOpenModal2}>Create Whiteboard</button>
+      </div>
 
-        {/* Join Whiteboard Modal */}
-        <AnimatePresence>
-          {isModalOpen && (
-            <>
-              <motion.div
-                className="fixed inset-0 bg-black bg-opacity-50 z-40"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={handleCloseModal}
+      {/* Join Whiteboard Modal */}
+      <Modal 
+        isOpen={isModalOpen} 
+        onClose={handleCloseModal} 
+        title="Join a Whiteboard"
+        onSubmit={handleJoinSubmit}
+        name={name}
+        setName={setName}
+        sessionId={sessionId}
+        setSessionId={setSessionId}
+        submitButtonText="Submit"
+      />
+
+      {/* Create Whiteboard Modal */}
+      <Modal 
+        isOpen={isModalOpen2} 
+        onClose={handleCloseModal2} 
+        title="Create a Whiteboard"
+        onSubmit={handleCreateSubmit}
+        name={name}
+        setName={setName}
+        submitButtonText="Create"
+      />
+    </div>
+  );
+};
+
+// Modal Component
+const Modal = ({ isOpen, onClose, title, onSubmit, name, setName, sessionId, setSessionId, submitButtonText }:any) => {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div
+            className="fixed inset-0 bg-black bg-opacity-50 z-40"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+          />
+          <motion.div
+            className="fixed inset-0 flex items-center justify-center z-50"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="bg-white rounded-lg shadow-lg w-full max-w-lg mx-4 p-6 relative">
+              <button className="absolute top-2 right-2 h-6 w-6 text-gray-500 hover:text-gray-800" onClick={onClose}>&times;</button>
+              <h2 className="text-xl font-semibold mb-4">{title}</h2>
+              <p className="text-gray-700">Please enter your name:</p>
+              <input
+                type="text"
+                placeholder="Enter your name"
+                className="border border-gray-300 rounded-lg w-full p-3 mt-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
               />
-              <motion.div
-                className="fixed inset-0 flex items-center justify-center z-50"
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 50 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="bg-white rounded-lg shadow-lg w-full max-w-lg mx-4 p-6 relative">
-                  <button className="absolute top-2 right-2 h-6 w-6 text-gray-500 hover:text-gray-800" onClick={handleCloseModal}>&times;</button>
-                  <h2 className="text-xl font-semibold mb-4">Join a Whiteboard</h2>
-                  <p className="text-gray-700">Please enter your name and Room ID:</p>
-                  <input
-                    type="text"
-                    placeholder="Enter your name"
-                    className="border border-gray-300 rounded-lg w-full p-3 mt-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
+              {sessionId !== undefined && (
+                <>
+                  <p className="text-gray-700 mt-4">Please enter Room ID:</p>
                   <input
                     type="text"
                     placeholder="Enter Room ID"
@@ -212,69 +254,38 @@ const CardsComponent: React.FC = () => {
                     value={sessionId}
                     onChange={(e) => setSessionId(e.target.value)}
                   />
-                  <div className="mt-6">
-                    <button className="bg-blue-500 text-white px-4 font-bold py-2 rounded-lg hover:bg-blue-600" onClick={handleCloseModal}>Close Modal</button>
-                    <button className="bg-blue-500 text-white font-bold px-4 py-2 rounded-lg ml-10 hover:bg-blue-600" onClick={handleJoinSubmit}>Submit</button>
-                  </div>
-                </div>
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
-
-        {/* Create Whiteboard Modal */}
-        <AnimatePresence>
-          {isModalOpen2 && (
-            <>
-              <motion.div
-                className="fixed inset-0 bg-black bg-opacity-50 z-40"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={handleCloseModal2}
-              />
-              <motion.div
-                className="fixed inset-0 flex items-center justify-center z-50"
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 50 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="bg-white rounded-lg shadow-lg w-full max-w-lg mx-4 p-6 relative">
-                  <button className="absolute top-2 right-2 h-6 w-6 text-gray-500 hover:text-gray-800" onClick={handleCloseModal2}>&times;</button>
-                  <h2 className="text-xl font-semibold mb-4">Create a Whiteboard</h2>
-                  <p className="text-gray-700">Please enter your name:</p>
-                  <input
-                    type="text"
-                    placeholder="Enter your name"
-                    className="border border-gray-300 rounded-lg w-full p-3 mt-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                  <div className="mt-6">
-                    <button className="bg-blue-500 text-white px-4 font-bold py-2 rounded-lg hover:bg-blue-600" onClick={handleCloseModal2}>Close Modal</button>
-                    <button className="bg-blue-500 text-white font-bold px-4 py-2 rounded-lg ml-10 hover:bg-blue-600" onClick={handleCreateSubmit}>Create</button>
-                  </div>
-                </div>
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
-      </div>
-    </>
+                </>
+              )}
+              <div className="mt-6">
+                <button className="bg-blue-500 text-white px-4 font-bold py-2 rounded-lg hover:bg-blue-600" onClick={onClose}>Close Modal</button>
+                <button className="bg-blue-500 text-white font-bold px-4 py-2 rounded-lg ml-10 hover:bg-blue-600" onClick={onSubmit}>{submitButtonText}</button>
+              </div>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 };
 
 // MainPage component that uses both UploadComponent and CardsComponent
 const MainPage: React.FC = () => {
   return (
-    <div className="flex flex-col md:flex-row items-center  justify-center min-h-screen bg-gray-100">
-      {/* Upload Component */}
-      <UploadComponent />
+    <>
+  
+  <div className="flex flex-col md:flex-row items-center justify-center min-h-screen bg-black">
+  
+  {/* Title */}
+  
 
-      {/* Cards Component */}
-      <CardsComponent />
-    </div>
+  {/* Upload Component */}
+  <UploadComponent />
+
+  {/* Cards Component */}
+  <CardsComponent />
+  
+</div>
+    </>
   );
 };
 

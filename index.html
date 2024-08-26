@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Test</title>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <h1>WebSocket Connection Test</h1>
+    <button id="joinSession">Join Session</button>
+    <script>
+        const socket = io('http://localhost:3001'); // Adjust the URL if needed
+
+        socket.on('connect', () => {
+            console.log('Connected to WebSocket server as:', socket.id);
+        });
+
+        socket.on('user-joined', (userId) => {
+            console.log('User joined:', userId);
+        });
+
+        socket.on('connected-users', (users) => {
+            console.log('Connected users:', users);
+        });
+
+        socket.on('user-left', (userId) => {
+            console.log('User left:', userId);
+        });
+
+        document.getElementById('joinSession').onclick = () => {
+            const sessionId = prompt("Enter session ID:");
+            socket.emit('join-session', sessionId);
+        };
+    </script>
+</body>
+</html>

@@ -2,9 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
-
-
 .boton-elegante {
   padding: 5px 10px;
   border: 2px solid #2c2c2c;
@@ -85,4 +82,5 @@
   
   background: #292929;
 }
+
 

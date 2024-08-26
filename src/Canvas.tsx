@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./App.css";
-import  Draggable  from 'react-draggable';
-import { ResizableBox } from 'react-resizable';
+
 
 const Canvas = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -17,6 +16,7 @@ const Canvas = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePosition, setImagePosition] = useState<{ x: number; y: number } | null>(null);
   const [imageSize, setImageSize] = useState({ width: 100, height: 100 }); // Default image size
+  const [draggableItems, setDraggableItems] = useState([]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -43,15 +43,19 @@ const Canvas = () => {
 
   const draw = (event: React.MouseEvent<HTMLCanvasElement>, drawing: any[]) => {
     if (!isDrawing || !contextRef.current) return;
-
+  
     const canvas = canvasRef.current;
     if (!canvas) return;
-
+  
     const ctx = contextRef.current;
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left; // No scaling needed for fixed size
     const y = event.clientY - rect.top;
-
+  
+    // Check if we're dragging an item
+   
+  
+    // Drawing shapes or text
     if (selectedShape === "line") {
       ctx.beginPath();
       ctx.moveTo(x, y);
@@ -76,6 +80,16 @@ const Canvas = () => {
       ctx.beginPath();
       ctx.moveTo(x, y);
     }
+  };
+
+  const handleDragStop = (index:any, e:any, data:any) => {
+    const updatedItems:any = [...draggableItems];
+    updatedItems[index] = {
+      ...updatedItems[index],
+      x: data.x,
+      y: data.y,
+    };
+    setDraggableItems(updatedItems);
   };
 
   const stopDrawing = () => {
@@ -174,99 +188,177 @@ const Canvas = () => {
     }
   }, [imageFile, imagePosition]);
 
+  const handleDownloadCanvas = () => {
+    const canvas = canvasRef.current;
+    
+    // Check if canvas is not null
+    if (canvas) {
+      const link = document.createElement('a');
+      link.download = 'drawing.png';
+      link.href = canvas.toDataURL();
+      link.click();
+    } else {
+      console.error("Canvas is not available.");
+    }
+  };
+
+  const copySessionId = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('sessionId');
+    console.log(sessionId)
+    if (sessionId) {
+      navigator.clipboard.writeText(sessionId).then(() => {
+        alert('Session ID copied to clipboard: ' + sessionId);
+      }).catch(err => {
+        console.error('Failed to copy: ', err);
+      });
+    } else {
+      alert('No session ID found in the URL.');
+    }
+  };
+
   return (
-    <div className="container">
-      <div className="controls">
-        <label>
-          Brush Color:
-          <input
-            type="color"
-            value={brushColor}
-            onChange={(e) => setBrushColor(e.target.value)}
-          />
-        </label>
-        <label>
-          Brush Size:
-          <input
-            type="number"
-            min="1"
-            max="50"
-            value={brushSize}
-            onChange={(e) => setBrushSize(Number(e.target.value))}
-          />
-        </label>
-        <button onClick={() => setIsTextMode(!isTextMode)}>
-          {isTextMode ? "Draw Mode" : "Text Mode"}
-        </button>
-        {isTextMode && (
-          <div>
-            <input
-              type="text"
-              value={text}
-              onChange={handleTextChange}
-              placeholder="Enter text"
-            />
-            <button onClick={addText}>Add Text</button>
-          </div>
-        )}
-        <button onClick={handleClear}>Clear</button>
-        <button onClick={handleUndo}>Undo</button>
-        <div>
-          <label>
-            <input
-              type="radio"
-              name="shape"
-              checked={selectedShape === null}
-              onChange={() => setSelectedShape(null)}
-            />
-            Pen
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="shape"
-              checked={selectedShape === "line"}
-              onChange={() => setSelectedShape("line")}
-            />
-            Line
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="shape"
-              checked={selectedShape === "rectangle"}
-              onChange={() => setSelectedShape("rectangle")}
-            />
-            Rectangle
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="shape"
-              checked={selectedShape === "circle"}
-              onChange={() => setSelectedShape("circle")}
-            />
-            Circle
-          </label>
-        </div>
-        <div>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-          />
-        </div>
-      </div>
-      
-      <canvas
-        className="canvas"
-        onMouseDown={startDrawing}
-        onMouseMove={(e) => draw(e, currentDrawing)}
-        onMouseUp={stopDrawing}
-        onMouseLeave={stopDrawing}
-        ref={canvasRef}
+    <div className="container mx-auto px-4 py-8 h-full w-full ">
+  <div className="controls bg-white flex flex-col md:flex-row rounded-lg shadow-lg p-6 mb-6">
+    <div className="flex items-center mb-4">
+      <label className="mx-4">Brush Color:</label>
+      <input
+        type="color"
+        value={brushColor}
+        onChange={(e) => setBrushColor(e.target.value)}
+        className="w-12 h-12 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
     </div>
+    <div className="flex items-center mb-4 mx-4">
+      <label className="mr-2">Brush Size:</label>
+      <input
+        type="number"
+        min="1"
+        max="50"
+        value={brushSize}
+        onChange={(e) => setBrushSize(Number(e.target.value))}
+        className="w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+    </div>
+    <div className="flex items-center mb-4">
+      <button
+        onClick={() => setIsTextMode(!isTextMode)}
+        className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded mr-2"
+      >
+        {isTextMode ? "Draw Mode" : "Text Mode"}
+      </button>
+      {isTextMode && (
+        <div className="flex items-center">
+          <input
+            type="text"
+            value={text}
+            onChange={handleTextChange}
+            placeholder="Enter text"
+            className="w-40 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 mr-2"
+          />
+          <button
+            onClick={addText}
+            className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
+          >
+            Add Text
+          </button>
+        </div>
+      )}
+    </div>
+    <div className="flex items-center mb-4">
+      <button
+        onClick={handleClear}
+        className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded mr-2"
+      >
+        Clear
+      </button>
+      <button
+        onClick={handleUndo}
+        className="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded"
+      >
+        Undo
+      </button>
+    </div>
+    <div className="flex items-center mb-4 mx-2">
+      <label className="mr-2">
+        <input
+          type="radio"
+          name="shape"
+          checked={selectedShape === null}
+          onChange={() => setSelectedShape(null)}
+          className="mr-1"
+        />
+        Pen
+      </label>
+      <label className="mr-2 ">
+        <input
+          type="radio"
+          name="shape"
+          checked={selectedShape === "line"}
+          onChange={() => setSelectedShape("line")}
+          className="mr-1"
+        />
+        Line
+      </label>
+      <label className="mr-2">
+        <input
+          type="radio"
+          name="shape"
+          checked={selectedShape === "rectangle"}
+          onChange={() => setSelectedShape("rectangle")}
+          className="mr-1"
+        />
+        Rectangle
+      </label>
+      <label className="mr-2">
+        <input
+          type="radio"
+          name="shape"
+          checked={selectedShape === "circle"}
+          onChange={() => setSelectedShape("circle")}
+          className="mr-1"
+        />
+        Circle
+      </label>
+    </div>
+    <div className="flex items-center mb-4">
+      <label className="mr-2">
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleImageUpload}
+          className="hidden"
+        />
+        <span className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded cursor-pointer">
+          Upload Image
+        </span>
+      </label>
+      <button
+        onClick={handleDownloadCanvas}
+        className="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded"
+      >
+        Download as PNG
+      </button>
+      <button
+            onClick={copySessionId}
+            className="bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded mr-2"
+          >
+            Copy Session ID
+          </button>
+    </div>
+  </div>
+  
+  <canvas
+    className="canvas border rounded-lg shadow-lg justify-center items-center bg-white"
+    onMouseDown={startDrawing}
+    onMouseMove={(e) => draw(e, currentDrawing)}
+    onMouseUp={stopDrawing}
+    onMouseLeave={stopDrawing}
+    ref={canvasRef}
+    
+  />
+  
+</div>
   );
 };
 
