@@ -1,46 +1,57 @@
-# Getting Started with Create React App
+# Project Setup Guide
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This guide will help you set up the project locally, including running Keycloak in a Docker container, installing necessary packages, and running both the frontend and backend applications.
 
-## Available Scripts
+## Prerequisites
 
-In the project directory, you can run:
+Before you begin, ensure you have the following installed on your machine:
 
-### `npm start`
+- [Node.js](https://nodejs.org/) (version 14 or higher)
+- [Docker](https://www.docker.com/get-started)
+- [Docker Compose](https://docs.docker.com/compose/install/)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+## Step 1: Set Up Keycloak with Docker
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+1. **Pull the Keycloak Docker Image**:
+   Open your terminal and run the following command to pull the Keycloak image:
+   ```bash
+   docker pull jboss/keycloak
+   ```
+2. **Run Keycloak**:
 
-### `npm test`
+    Start a Keycloak instance using Docker with the following command:
+    ```bash
+    docker run -d -p 8080:8080 --name keycloak -e KEYCLOAK_USER=admin -e KEYCLOAK_PASSWORD=admin jboss/keycloak 
+    ```
+3. **Access Keycloak Admin Console**:
+    Open your browser and go to http://localhost:8080/auth/admin to access the Keycloak admin console. Log in using the credentials you set (admin/admin).
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+4. **Create a New Realm and Client**:
+    In the Keycloak admin console, create a new realm (e.g., myrealm).
+Create a new client (e.g., my-react-app) and set the following:
+Access Type: Public
+Valid Redirect URIs: http://localhost:3000/*
+Web Origins: http://localhost:3000
 
-### `npm run build`
+5. **Navigate to the main Directory**: Initiate the frontend project
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+   ```bash
+    npm install
+    npm start
+    ```
+6. **Navigate to the Backend Directory**: 
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+    ```bash
+    cd backend
+    npm install
+    npm start
+    ```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Here are few of the images of UI for your references - 
+![alt text](image.png)
 
-### `npm run eject`
+![alt text](image-1.png)
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+![alt text](image-2.png)
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+![alt text](image-3.png)
