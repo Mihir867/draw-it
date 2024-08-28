@@ -1,0 +1,44 @@
+# Dockerfile.frontend
+
+# Use Node.js as the base image
+FROM node:18-alpine
+
+# Set the working directory
+WORKDIR /app
+
+# Copy package.json and package-lock.json files
+COPY frontend-dir/package*.json ./
+
+# Install frontend dependencies
+RUN npm install
+
+# Copy the frontend source code
+COPY frontend-dir .
+
+# Expose the frontend port
+EXPOSE 3000
+
+# Start the frontend server
+CMD ["npm", "start"]
+# Dockerfile.frontend
+
+# Use Node.js as the base image
+FROM node:18-alpine
+
+# Set the working directory
+WORKDIR /app
+
+# Copy package.json and package-lock.json files
+COPY frontend-dir/package*.json ./
+
+# Install frontend dependencies
+RUN npm install
+
+# Copy the frontend source code
+COPY frontend-dir .
+
+# Expose the frontend port
+EXPOSE 3000
+
+# Start the frontend server
+CMD ["npm", "start"]
